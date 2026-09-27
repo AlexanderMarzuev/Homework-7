@@ -1,6 +1,7 @@
 package org.example;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.example.dto.UserEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,15 +11,20 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final KafkaProducer kafkaProducer;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, KafkaProducer kafkaProducer) {
         this.userRepository = userRepository;
+        this.kafkaProducer = kafkaProducer;
     }
 
     @Transactional
     @CircuitBreaker(name = "user-operation", fallbackMethod = "fallbackCreate")
     public User create(User user) {
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        kafkaProducer.sendUserEvent(new UserEvent("CREATED", saved.getId(),
+                saved.getName(), saved.getEmail()));
+        return saved;
     }
 
     private User fallbackCreate(User user, Throwable t) {
@@ -57,7 +63,10 @@ public class UserService {
         if (user.getId() == null) {
             throw new IllegalArgumentException("Cannot update user without ID");
         }
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        kafkaProducer.sendUserEvent(new UserEvent("UPDATED", saved.getId(),
+                saved.getName(), saved.getEmail()));
+        return saved;
     }
 
     private User fallbackUpdate(User user, Throwable t) {
@@ -72,6 +81,7 @@ public class UserService {
             throw new IllegalArgumentException("User not found with id: " + id);
         }
         userRepository.deleteById(id);
+        kafkaProducer.sendUserEvent(new UserEvent("DELETED", id, null, null));
     }
 
     private void fallbackDelete(Long id, Throwable t) {

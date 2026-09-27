@@ -2,10 +2,8 @@ server:
   port: 8081
 
 spring:
-  application:
-    name: user-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/mydb
+    url: jdbc:postgresql://postgres:5432/mydb
     username: myuser
     password: mypassword
   jpa:
@@ -15,13 +13,18 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: kafka:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    topic:
+      user-events: user-events
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
-    register-with-eureka: true
-    fetch-registry: true
+      defaultZone: http://eureka-server:8761/eureka
 
 resilience4j:
   circuitbreaker:

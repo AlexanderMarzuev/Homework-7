@@ -1,10 +1,14 @@
-# Локальный fallback-конфиг (используется, если Config Server недоступен)
 server:
   port: 8081
 
 spring:
+  application:
+    name: user-service
   config:
     import: "optional:configserver:http://localhost:8888"
+  cloud:
+    config:
+      fail-fast: false
   datasource:
     url: jdbc:postgresql://localhost:5432/mydb
     username: myuser
@@ -16,6 +20,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    topic:
+      user-events: user-events
 
 eureka:
   client:

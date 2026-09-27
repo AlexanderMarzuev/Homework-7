@@ -19,4 +19,14 @@ public class FallbackController {
                         "message", "User service is temporarily unavailable. Please try again later."
                 ));
     }
+
+    @GetMapping("/fallback/notifications")
+    public ResponseEntity<Map<String, String>> fallbackNotifications() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of(
+                        "status", "error",
+                        "message", "Notification service is temporarily unavailable. Please try again later."
+                ));
+    }
 }

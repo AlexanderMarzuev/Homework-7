@@ -22,6 +22,9 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private KafkaProducer kafkaProducer;
+
     @Test
     void create_shouldSaveUser() {
         User input = new User(null, "Alex", "alex@gmail.com", 30);
@@ -31,6 +34,7 @@ class UserServiceTest {
         User result = userService.create(input);
         assertThat(result.getId()).isEqualTo(1L);
         verify(userRepository).save(any(User.class));
+        verify(kafkaProducer).sendUserEvent(any());
     }
 
     @Test
@@ -60,5 +64,6 @@ class UserServiceTest {
 
         userService.delete(1L);
         verify(userRepository).deleteById(1L);
+        verify(kafkaProducer).sendUserEvent(any());
     }
 }
